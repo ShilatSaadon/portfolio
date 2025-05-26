@@ -10,7 +10,7 @@ const { isLoggedIn, logout } = useContext(AuthContext);
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          פורטפוליו שלי
+          portfolio
         </Typography>
         <Button color="inherit" sx={{ my: 2, display: 'block' }} component={Link} to="/">Home</Button>
         <Button color="inherit" sx={{ my: 2, display: 'block' }} component={Link} to="/about">About</Button>
