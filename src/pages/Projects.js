@@ -1,6 +1,6 @@
 import {
   Container, Alert, CircularProgress, Typography, Box, Button,
-  Dialog, DialogActions, DialogContent, Grid, DialogTitle, TextField
+  Dialog, DialogActions, DialogContent, Grid, DialogTitle, TextField, ToggleButton, ToggleButtonGroup
 } from '@mui/material';
 import { AuthContext } from '../context/AuthContext';
 import ProjectCard from '../components/ProjectCard';
@@ -12,10 +12,10 @@ function Projects() {
     const { isLoggedIn } = useContext(AuthContext);
 
     const [projects, setProjects] = useState([]);
-    const [useMoke, setUseMoke] = useState(true);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+    const [source, setSource] = useState('mock');
+
     const [openEditModal, setOpenEditModal] = useState(false);
     const [currentProject, setCurrentProject] = useState(null);
     
@@ -27,21 +27,33 @@ function Projects() {
         title: '', description: '', image: '', siteLink: '', githubLink: ''
     });
 
-    // Load projects on component mount
-    useEffect(() => {
-        if (useMoke){
-           setProjects(projectsMock);
-           setLoading(false);
-        }else{
-            axios.get("http://localhost:5000")
-            .then(response  => setProjects(response.data))
-            .catch(error => console.lof('Error fetching data:', error)); 
+    // Fetch projects from server or mock
+    const fetchProjects = () => {
+        setLoading(true);
+        if (source === 'mock') {
+            setProjects(projectsMock);
+            setLoading(false);
+        } else {
+            axios.get('http://localhost:5000/api/projects')
+            . then(response => {
+                setProjects(response.data);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching projects:', error);
+                setError('Failed to load projects');
+                setLoading(false);
+            });
         }
-    } ,[useMoke]);
+    };
 
-    // --- Edit functions ---
+    useEffect(() => {
+        fetchProjects();
+    }, [source]);
+
+    // Edit handlers
     const handleEdit = (id) => {
-        const project_to_edit = projects.find(p => p.id == id);
+        const project_to_edit = projects.find(p => p.id === id);
         setCurrentProject(project_to_edit);
         setOpenEditModal(true);
     };
@@ -62,13 +74,23 @@ function Projects() {
     // const handleSaveEdit = async () => {
     const handleSaveEdit = () => {
         if (!currentProject) return;
-        setProjects(prevProjects =>
-            prevProjects.map(p => (p.id === currentProject.id ? currentProject : p))
-        );
-        handleCloseEditModal();
+        if (source === "mock"){
+            setProjects(prevProjects =>
+                prevProjects.map(p => (p.id === currentProject.id ? currentProject : p))
+            );
+            handleCloseEditModal();
+        }else{
+            axios.put(`http://localhost:5000/api/projects/${currentProject.id}`, currentProject)
+            .then(() => {
+                fetchProjects();
+                handleCloseEditModal();
+            })
+            .catch(err => console.error('Error updating project:', err));
+        }  
+        
     };
 
-    // --- Delete functions ---
+    // Delete handlers
     const handleDelete = (id) => {
         setProjectToDeleteId(id);
         setOpenDeleteConfirm(true); 
@@ -81,10 +103,22 @@ function Projects() {
 
     const handleConfirmDelete = async () => {
         if (!projectToDeleteId) return;
-        setProjects(prevProjects => prevProjects.filter(p => p.id !== projectToDeleteId));
-        handleCloseDeleteConfirm();  
+        if (source === 'mock'){
+            setProjects(prevProjects => prevProjects.filter(p => p.id !== projectToDeleteId));
+            handleCloseDeleteConfirm(); 
+        }else{
+            axios.delete(`http://localhost:5000/api/projects/${projectToDeleteId}`)
+            .then(() => {
+                fetchProjects();
+                handleCloseDeleteConfirm(); 
+            })
+            .catch(err => console.error('Error deleting project:', err));
+        }  
+           
     };
-    // --- Add function ---
+
+
+    // Add project handlers
     const handleAddProjectChange = (e) => {
         const { name, value } = e.target;
         setNewProject(prev => ({ ...prev, [name]: value }));
@@ -101,9 +135,18 @@ function Projects() {
         // Ensure optional fields exist so buttons render correctly
         if (!projectToAdd.githubLink) projectToAdd.githubLink = '';
         if (!projectToAdd.siteLink) projectToAdd.siteLink = '';
-        setProjects(prev => [...prev, projectToAdd]);
-        setOpenAddModal(false);
-        setNewProject({ title: '', description: '', image: '', siteLink: '', githubLink: '' });
+        if (source === 'mock'){
+            setProjects(prev => [...prev, projectToAdd]);
+            handleCloseAddModal();
+        }else {
+            axios.post('http://localhost:5000/api/projects', newProject)
+            .then(() => {
+                fetchProjects();
+                handleCloseAddModal();
+            })
+            .catch(err => console.error('Error adding project:', err));
+        }     
+        
     };
 
   return (
@@ -114,6 +157,19 @@ function Projects() {
       <Typography variant='h5' sx={{ p: 1 }} textAlign='center'>
         Here you will find examples of projects I have done: websites, apps and more. 
       </Typography>
+      {/* Toggle data source */}
+      {isLoggedIn && 
+      (<Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <ToggleButtonGroup
+          value={source}
+          exclusive
+          onChange={(e, newSource) => newSource && setSource(newSource)}
+          aria-label="Data source"
+        >
+          <ToggleButton value="server" aria-label="Server">Server</ToggleButton>
+          <ToggleButton value="mock" aria-label="Mock">Mock</ToggleButton>
+        </ToggleButtonGroup>
+        </Box>)}
       {isLoggedIn && (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
           <Button variant="contained" onClick={() => setOpenAddModal(true)}>+ Add Project</Button>
@@ -141,7 +197,7 @@ function Projects() {
         <Grid container spacing={4} justifyContent="center">
             {projects.map((p) => (
                 <Grid item key={p.id} xs={12} sm={6} md={4} lg={3} sx={{ display: 'flex' }}>
-                    <ProjectCard project={p} onEdit={handleEdit} OnDelete={handleDelete}></ProjectCard>
+                    <ProjectCard project={p} onEdit={handleEdit} onDelete={handleDelete}></ProjectCard>
                 </Grid>
             ))}
         </Grid>

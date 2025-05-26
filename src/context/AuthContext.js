@@ -4,7 +4,7 @@ export const AuthContext = createContext();
 
 // This provider wraps the app and provides login/logout state
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Function to simulate user login
   const login = () => setIsLoggedIn(true);

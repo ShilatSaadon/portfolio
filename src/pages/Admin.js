@@ -1,4 +1,4 @@
-import {  Typography } from '@mui/material';
+import {  Typography, Snackbar, Alert } from '@mui/material';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -6,6 +6,7 @@ import { useState, useContext } from 'react';
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
 import { AuthContext } from '../context/AuthContext';
 import Grid from '@mui/material/Grid';
+import { useNavigate } from 'react-router-dom';
 
 // List of hardcoded admin users
 const ADMINS = [
@@ -25,9 +26,13 @@ const formBoxSx = {
 };
 
 function Admin() {
-    const { login, logout } = useContext(AuthContext);
+    const { login } = useContext(AuthContext);
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [errorOpen, setErrorOpen] = useState(false);
+    const [successOpen, setSuccessOpen] = useState(false); 
 
     // Handle admin login
     const handleSubmit = (e) => {
@@ -38,13 +43,16 @@ function Admin() {
 
         if (isAdmin) {
             login(); // Update auth context
+            setSuccessOpen(true); // show success message
+            setTimeout(() => navigate('/projects'), 1000); // navigate after success
         } else {
-            alert("Email or password is incorrect");
+            setErrorOpen(true); // show error message
         }
 
     };
 
   return (
+    <>
     <Grid
       container 
       direction="row"
@@ -70,10 +78,12 @@ function Admin() {
           }}
         >
       <Typography variant="h3" gutterBottom textAlign='center'>
-        Admin page
+        Admin Page
       </Typography >
-      <Typography textAlign='center'>
-        Here you can add, update, or delete projects (password protected of course 😉).
+      <Typography variant="h6" textAlign='center'>
+        This page is accessible only to authorized <strong>admin users</strong>.<br/>
+        Once you log in, you'll unlock full access to add, edit, or delete portfolio projects —
+        but all actions are performed exclusively on the <strong>Projects</strong> page.
       </Typography>
       </Grid>
 
@@ -91,12 +101,12 @@ function Admin() {
             bgcolor: 'secondary.light',
           }}
         >
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} autoComplete="off">
         <Box sx={formBoxSx} > 
         
-            <TextField id="email" onChange={(e) => setEmail(e.target.value)} placeholde="" defaultValue="" label="Admin Email" variant="outlined"   required/>
+            <TextField id="email" autoComplete="off" onChange={(e) => setEmail(e.target.value)} placeholde="" defaultValue="" label="Admin Email" variant="outlined"   required/>
       
-            <TextField type='password' onChange={(e) => setPassword(e.target.value)} placeholde="" defaultValue="" id="password" label="Password"  variant="outlined"  required />
+            <TextField type='password' autoComplete="off" onChange={(e) => setPassword(e.target.value)} placeholde="" defaultValue="" id="password" label="Password"  variant="outlined"  required />
 
             <Button size="large" type='submit' variant="contained" endIcon={<LockOpenOutlinedIcon />}>
                 Sign-In 
@@ -107,6 +117,23 @@ function Admin() {
     </Grid>
 
     </Grid>
+
+    {/* Error Snackbar */}
+      <Snackbar open={errorOpen} autoHideDuration={4000} onClose={() => setErrorOpen(false)}>
+        <Alert onClose={() => setErrorOpen(false)} severity="error" sx={{ width: '100%' }}>
+          Email or password is incorrect
+        </Alert>
+      </Snackbar>
+
+      {/* Success Snackbar */}
+      <Snackbar open={successOpen} autoHideDuration={2000} onClose={() => setSuccessOpen(false)}>
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Logged in successfully!
+        </Alert>
+      </Snackbar>
+    </>
+
+    
   );
 }
 
