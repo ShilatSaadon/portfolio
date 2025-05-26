@@ -7,10 +7,13 @@ import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
 import { AuthContext } from '../context/AuthContext';
 import Grid from '@mui/material/Grid';
 
+// List of hardcoded admin users
 const ADMINS = [
     {email: 'netaRonen@gmail.com', password:'neta123'},
     {email: 'shilatSaadon@gmail.com', password:'shilat123'},
 ];
+
+// Styling for the form box
 const formBoxSx = {
   display: 'flex',
   flexDirection: 'column',
@@ -20,18 +23,21 @@ const formBoxSx = {
   '& .MuiTextField-root': { m: 1, width: '25ch', alignSelf: 'center' },
   '& .MuiButton-root': { m: 1, width: '25ch', alignSelf: 'center' }
 };
+
 function Admin() {
     const { login, logout } = useContext(AuthContext);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    // Handle admin login
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Check if the user exists in the ADMINS array
+
+        // Check if entered credentials match a predefined admin
         const isAdmin = ADMINS.some(admin => admin.email === email && admin.password === password);
 
         if (isAdmin) {
-            login(); // Call the login function if a matching user is found
+            login(); // Update auth context
         } else {
             alert("Email or password is incorrect");
         }

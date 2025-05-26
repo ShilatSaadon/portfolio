@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid';
 
 function Home() {
   return (
+    // Use a Grid container to center the text content
     <Grid 
       container 
       direction="column"

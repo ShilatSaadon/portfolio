@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 
+// Define a custom Material UI theme for the entire app
 const myTheme = createTheme({
   palette: {
     primary: {
