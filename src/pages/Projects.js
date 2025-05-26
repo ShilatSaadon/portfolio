@@ -7,6 +7,8 @@ import ProjectCard from '../components/ProjectCard';
 import React, { useState, useEffect, useContext } from 'react';
 import projectsMock from '../data/projectsMock';
 import axios from 'axios';
+const API_BASE = process.env.REACT_APP_API_BASE;
+
 
 function Projects() {
     const { isLoggedIn } = useContext(AuthContext);
@@ -14,7 +16,7 @@ function Projects() {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [source, setSource] = useState('mock');
+    const [source, setSource] = useState('server');
 
     const [openEditModal, setOpenEditModal] = useState(false);
     const [currentProject, setCurrentProject] = useState(null);
@@ -34,7 +36,7 @@ function Projects() {
             setProjects(projectsMock);
             setLoading(false);
         } else {
-            axios.get('http://localhost:5000/api/projects')
+            axios.get(`${API_BASE}/api/projects`)
             . then(response => {
                 setProjects(response.data);
                 setLoading(false);
@@ -80,7 +82,7 @@ function Projects() {
             );
             handleCloseEditModal();
         }else{
-            axios.put(`http://localhost:5000/api/projects/${currentProject.id}`, currentProject)
+            axios.put(`${API_BASE}/api/projects/${currentProject.id}`, currentProject)
             .then(() => {
                 fetchProjects();
                 handleCloseEditModal();
@@ -107,7 +109,7 @@ function Projects() {
             setProjects(prevProjects => prevProjects.filter(p => p.id !== projectToDeleteId));
             handleCloseDeleteConfirm(); 
         }else{
-            axios.delete(`http://localhost:5000/api/projects/${projectToDeleteId}`)
+            axios.delete(`${API_BASE}/api/projects/${projectToDeleteId}`)
             .then(() => {
                 fetchProjects();
                 handleCloseDeleteConfirm(); 
@@ -139,7 +141,7 @@ function Projects() {
             setProjects(prev => [...prev, projectToAdd]);
             handleCloseAddModal();
         }else {
-            axios.post('http://localhost:5000/api/projects', newProject)
+            axios.post(`${API_BASE}/api/projects`, newProject)
             .then(() => {
                 fetchProjects();
                 handleCloseAddModal();
